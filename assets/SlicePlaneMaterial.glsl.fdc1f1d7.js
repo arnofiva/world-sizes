@@ -1,1 +1,0 @@
-import"./vendor.f59113c8.js";import{i as f}from"./SliceAnalysisView3D.e1232d23.js";import"./LineVisualElement.2ffa1b42.js";import"./persistable.f2f26400.js";import"./BuildingComponentSublayer.dcba7f1a.js";import"./capabilities.ee85458d.js";import"./I3SIndexInfo.e3dbff16.js";import"./I3SLayerDefinitions.4cf2409b.js";import"./ImageMaterial.44e6df87.js";export{f as build};
