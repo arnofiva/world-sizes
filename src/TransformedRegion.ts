@@ -21,6 +21,22 @@ interface TransformedRegionProps {
   selection: SelectedRegion;
 }
 
+const centerSymbol = new PointSymbol3D({
+  symbolLayers: [
+    new ObjectSymbol3DLayer({
+      material: {
+        color: [0, 0, 0, 0],
+      },
+      width: 5_000,
+      height: 5_000,
+      depth: 5_000,
+      resource: {
+        primitive: "diamond",
+      },
+    }),
+  ],
+});
+
 @subclass("TrueSize.TransformedRegion")
 export default class TransformedRegion extends Accessor {
   @property({ constructOnly: true })
@@ -31,21 +47,7 @@ export default class TransformedRegion extends Accessor {
 
   @property()
   center = new Graphic({
-    symbol: new PointSymbol3D({
-      symbolLayers: [
-        new ObjectSymbol3DLayer({
-          material: {
-            color: [0, 0, 0, 0],
-          },
-          width: 5_000,
-          height: 5_000,
-          depth: 5_000,
-          resource: {
-            primitive: "diamond",
-          },
-        }),
-      ],
-    }),
+    symbol: centerSymbol,
   });
 
   @property()
