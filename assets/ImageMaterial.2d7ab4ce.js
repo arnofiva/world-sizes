@@ -1,0 +1,33 @@
+var C=Object.defineProperty;var f=Object.getOwnPropertySymbols;var $=Object.prototype.hasOwnProperty,y=Object.prototype.propertyIsEnumerable;var v=(a,e,t)=>e in a?C(a,e,{enumerable:!0,configurable:!0,writable:!0,value:t}):a[e]=t,u=(a,e)=>{for(var t in e||(e={}))$.call(e,t)&&v(a,t,e[t]);if(f)for(var t of f(e))y.call(e,t)&&v(a,t,e[t]);return a};import{cC as O,cD as A,cm as T,cE as c,cF as x,cG as S,cH as F,cI as i,cJ as b,cK as D,cL as w,cM as E,J as n,cN as o,cO as g,cP as p,cQ as N,cR as q,cS as H,cT as R,cU as I,cV as U,cW as L,cX as M,cY as G,cZ as W,c_ as V,c$ as j,d0 as z,d1 as B,d2 as Q,d3 as J,d4 as K,d5 as X,d6 as Y,d7 as Z,d8 as k,d9 as ee,da as te,db as ae,dc as d,dd as se,de as re,df as ie,dg as ne}from"./vendor.5a0f9a12.js";function oe(a){const e=new O;return e.include(A,{linearDepth:!1}),e.vertex.uniforms.add("proj","mat4").add("view","mat4"),e.attributes.add(T.POSITION,"vec3"),e.attributes.add(T.UV0,"vec2"),e.varyings.add("vpos","vec3"),a.multipassTerrainEnabled&&e.varyings.add("depth","float"),e.vertex.uniforms.add("textureCoordinateScaleFactor","vec2"),e.vertex.code.add(c`
+    void main(void) {
+      vpos = position;
+      ${a.multipassTerrainEnabled?"depth = (view * vec4(vpos, 1.0)).z;":""}
+      vTexCoord = uv0 * textureCoordinateScaleFactor;
+      gl_Position = transformPosition(proj, view, vpos);
+    }
+  `),e.include(x,a),a.multipassTerrainEnabled&&(e.fragment.include(S),e.include(F,a)),e.fragment.uniforms.add("tex","sampler2D"),e.fragment.uniforms.add("opacity","float"),e.varyings.add("vTexCoord","vec2"),a.output===i.Alpha?e.fragment.code.add(c`
+    void main() {
+      discardBySlice(vpos);
+      ${a.multipassTerrainEnabled?"terrainDepthTest(gl_FragCoord, depth);":""}
+
+      float alpha = texture2D(tex, vTexCoord).a * opacity;
+      if (alpha  < ${c.float(b)}) {
+        discard;
+      }
+
+      gl_FragColor = vec4(alpha);
+    }
+    `):(e.fragment.include(D),e.fragment.code.add(c`
+    void main() {
+      discardBySlice(vpos);
+      ${a.multipassTerrainEnabled?"terrainDepthTest(gl_FragCoord, depth);":""}
+      gl_FragColor = texture2D(tex, vTexCoord) * opacity;
+
+      if (gl_FragColor.a < ${c.float(b)}) {
+        discard;
+      }
+
+      gl_FragColor = highlightSlice(gl_FragColor, vpos);
+      ${a.oitEnabled?"gl_FragColor = premultiplyAlpha(gl_FragColor);":""}
+    }
+    `)),e}const le=Object.freeze({__proto__:null,build:oe});class h extends H{initializeProgram(e){const t=h.shader.get(),s=this.configuration,l=t.build({output:s.output,slicePlaneEnabled:s.slicePlaneEnabled,sliceHighlightDisabled:!1,sliceEnabledForVertexPrograms:!1,oitEnabled:s.transparencyPassType===p.Color,multipassTerrainEnabled:s.multipassTerrainEnabled,cullAboveGround:s.cullAboveGround});return new R(e.rctx,l,I)}bindPass(e,t){U(this.program,t.camera.projectionMatrix),this.program.setUniform1f("opacity",e.opacity),t.multipassTerrainEnabled&&(this.program.setUniform2fv("nearFar",t.camera.nearFar),this.program.setUniform2fv("inverseViewport",t.inverseViewport),L(this.program,t))}bindDraw(e){M(this.program,e),G(this.program,this.configuration,e),this.program.rebindTextures()}_setPipelineState(e,t){const s=this.configuration,l=e===p.NONE,m=e===p.FrontFace;return W({blending:s.output!==i.Color&&s.output!==i.Alpha||!s.transparent?null:l?ce:V(e),culling:j(s.cullFace),depthTest:{func:z(e)},depthWrite:l?s.writeDepth&&B:Q(e),colorWrite:J,stencilWrite:s.sceneHasOcludees?K:null,stencilTest:s.sceneHasOcludees?t?X:Y:null,polygonOffset:l||m?null:Z(s.enableOffset)})}initializePipeline(){return this._occludeePipelineState=this._setPipelineState(this.configuration.transparencyPassType,!0),this._setPipelineState(this.configuration.transparencyPassType,!1)}getPipelineState(e,t){return t?this._occludeePipelineState:super.getPipelineState(e,t)}}h.shader=new q(le,()=>import("./ImageMaterial.glsl.ae2202cc.js"));const ce=w(E.ONE,E.ONE_MINUS_SRC_ALPHA);class r extends N{constructor(){super(...arguments),this.output=i.Color,this.cullFace=g.None,this.slicePlaneEnabled=!1,this.transparent=!1,this.enableOffset=!0,this.writeDepth=!0,this.sceneHasOcludees=!1,this.transparencyPassType=p.NONE,this.multipassTerrainEnabled=!1,this.cullAboveGround=!1}}n([o({count:i.COUNT})],r.prototype,"output",void 0),n([o({count:g.COUNT})],r.prototype,"cullFace",void 0),n([o()],r.prototype,"slicePlaneEnabled",void 0),n([o()],r.prototype,"transparent",void 0),n([o()],r.prototype,"enableOffset",void 0),n([o()],r.prototype,"writeDepth",void 0),n([o()],r.prototype,"sceneHasOcludees",void 0),n([o({count:p.COUNT})],r.prototype,"transparencyPassType",void 0),n([o()],r.prototype,"multipassTerrainEnabled",void 0),n([o()],r.prototype,"cullAboveGround",void 0);class me extends ee{constructor(e){super(e,pe),this.supportsEdges=!0,this.techniqueConfig=new r}getTechniqueConfig(e,t){return this.techniqueConfig.output=e,this.techniqueConfig.cullFace=this.parameters.cullFace,this.techniqueConfig.slicePlaneEnabled=this.parameters.slicePlaneEnabled,this.techniqueConfig.transparent=this.parameters.transparent,this.techniqueConfig.writeDepth=this.parameters.writeDepth,this.techniqueConfig.sceneHasOcludees=this.parameters.sceneHasOcludees,this.techniqueConfig.transparencyPassType=t.transparencyPassType,this.techniqueConfig.enableOffset=t.camera.relativeElevation<te,this.techniqueConfig.multipassTerrainEnabled=t.multipassTerrainEnabled,this.techniqueConfig.cullAboveGround=t.cullAboveGround,this.techniqueConfig}intersect(e,t,s,l,m,P,_){ae(e,t,l,m,P,void 0,_)}requiresSlot(e,t){return e===d.DRAPED_MATERIAL?!0:se(t)===i.Highlight?e===d.OPAQUE_MATERIAL:e===(this.parameters.transparent?this.parameters.writeDepth?d.TRANSPARENT_MATERIAL:d.TRANSPARENT_DEPTH_WRITE_DISABLED_MATERIAL:d.OPAQUE_MATERIAL)}createGLMaterial(e){return e.output===i.Color||e.output===i.Alpha||e.output===i.Highlight?new de(e):void 0}createBufferWriter(){return new re(ie)}}class de extends ne{constructor(e){super(u(u({},e),e.material.parameters))}updateParameters(e){const t=this._material.parameters;return this.updateTexture(t.textureId),this.ensureTechnique(h,e)}_updateOccludeeState(e){e.hasOccludees!==this._material.parameters.sceneHasOcludees&&(this._material.setParameters({sceneHasOcludees:e.hasOccludees}),this.updateParameters(e))}beginSlot(e){return this._output!==i.Color&&this._output!==i.Alpha||this._updateOccludeeState(e),this.updateParameters(e)}bind(e,t){this.bindTextures(t.program),this.bindTextureScale(t.program),t.bindPass(this._material.parameters,e)}}const pe=u({transparent:!1,writeDepth:!0,slicePlaneEnabled:!1,cullFace:g.None,sceneHasOcludees:!1,opacity:1,textureId:null,initTextureTransparent:!0},k);export{oe as g,me as m};
