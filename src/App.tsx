@@ -8,15 +8,11 @@ import { tsx } from "@arcgis/core/widgets/support/widget";
 import Widget from "@arcgis/core/widgets/Widget";
 import { map, view } from "./globals";
 import { PlaceCountry } from "./PlaceCountry";
-import { RegionWidget } from "./RegionWidget";
 
 const regionSelector = new PlaceCountry();
 
 @subclass("TrueSize.App")
 export default class App extends Widget {
-  @property()
-  regions: RegionWidget[] = [];
-
   @property({ readOnly: true })
   editor = regionSelector.regionEditor;
 
@@ -47,25 +43,6 @@ export default class App extends Widget {
             l.outFields = ["COUNTRY"];
           }
         });
-
-      // const fl = map.allLayers.find(
-      //   (l: any) =>
-      //     l.portalItem && l.portalItem.id === "f7c4a1c48f074de8905bd672be11e168"
-      // ) as FeatureLayer;
-      // const query = fl.createQuery();
-      // // query.orderByFields = ["Shape__Area DESC"];
-      // query.where = "FID in (59, 20, 249, 201, 186, 267)";
-      // query.returnGeometry = true;
-      // query.outFields = ["*"];
-      // const results = await fl.queryFeatures(query);
-      // this.regions = results.features.map((graphic) => {
-      //   const widget = new RegionWidget();
-      //   widget.region = new SelectedRegion({
-      //     graphic,
-      //     color: this.white,
-      //   });
-      //   return widget;
-      // });
     });
   }
 
