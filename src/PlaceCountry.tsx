@@ -4,8 +4,11 @@ import {
 } from "@arcgis/core/core/accessorSupport/decorators";
 import * as promiseUtils from "@arcgis/core/core/promiseUtils";
 import * as watchUtils from "@arcgis/core/core/watchUtils";
+import { Polygon } from "@arcgis/core/geometry";
+import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import { tsx } from "@arcgis/core/widgets/support/widget";
 import Widget from "@arcgis/core/widgets/Widget";
+import simplify from "simplify-js";
 import { countryLabel } from "./countryUtils";
 import { map, palette, view } from "./globals";
 import RegionEditor from "./RegionEditor";
@@ -35,7 +38,7 @@ export class PlaceCountry extends Widget {
     );
   }
 
-  private async queryRegion(e: MouseEvent) {
+  private async queryRegion(e: MouseEvent, serverSide = false) {
     const include = map.allLayers.filter(
       (l) => l.type === "feature" || l.type === "graphics"
     );
@@ -56,7 +59,23 @@ export class PlaceCountry extends Widget {
         return layerIndex(b) - layerIndex(a);
       });
 
-      return results[0].graphic;
+      const graphic = results[0].graphic;
+      const layer = graphic.layer;
+      if (
+        layer.type === "feature" &&
+        layer instanceof FeatureLayer &&
+        serverSide
+      ) {
+        const query = layer.createQuery();
+        query.returnGeometry = true;
+        query.objectIds = [graphic.getObjectId()];
+        query.outSpatialReference = graphic.geometry.spatialReference;
+        const response = await layer.queryFeatures(query);
+        if (response.features.length) {
+          return response.features[0];
+        }
+      }
+      return graphic;
     }
   }
 
@@ -110,7 +129,7 @@ export class PlaceCountry extends Widget {
       return;
     }
 
-    const graphic = await this.queryRegion(e);
+    const graphic = await this.queryRegion(e, true);
 
     if (graphic) {
       const color = palette.selectionColor;
@@ -119,10 +138,47 @@ export class PlaceCountry extends Widget {
       } else if (color) {
         e.preventDefault();
 
+        const clone = graphic.clone();
+        const geometry = clone.geometry as Polygon;
+
+        // The further the country is in the north / south, the more we have to simplify
+        const ymax = Math.max(
+          Math.abs(geometry.extent.ymax),
+          Math.abs(geometry.extent.ymin)
+        );
+        const tolerance = ymax / 2500;
+
+        let rings = geometry.rings;
+        const maxLength = rings.reduce(
+          (acc, cur) => Math.max(cur.length, acc),
+          0
+        );
+
+        // Filter small islands around main land
+        rings = rings.filter((r) => r.length > maxLength / 10);
+
+        let before = 0;
+        let after = 0;
+
+        // Simplify remaining rings
+        rings = rings.map((ring) => {
+          const points = ring.map((c) => {
+            return { x: c[0], y: c[1] };
+          });
+          before += points.length;
+          const simplified = simplify(points, tolerance);
+          after += simplified.length;
+          return simplified.map((p) => [p.x, p.y]);
+        });
+
+        // console.log({ before, after, countr: countryLabel(clone) });
+
+        geometry.rings = rings;
+
         this.regionEditor.editSelection(
           new SelectedRegion({
             color,
-            graphic,
+            graphic: clone,
           })
         );
         this.resetRegion();
