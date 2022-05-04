@@ -147,5 +147,7 @@ export default class RegionEditor extends Accessor {
 
     // view.goTo(country);
     this.continueEditing(selection.graphic);
+
+    view.goTo(region.center.geometry);
   }
 }
