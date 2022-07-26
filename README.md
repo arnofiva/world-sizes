@@ -1,6 +1,6 @@
 # ArcGIS API for JavaScript template
 
-[![World Sizes](./public/Thumbnail.png)](https://arnofiva.github.io/world-sizes)
+[![World Sizes](./public/thumbnail.png)](https://arnofiva.github.io/world-sizes)
 
 To start:
 
