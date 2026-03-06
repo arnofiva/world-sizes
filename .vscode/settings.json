@@ -1,6 +1,22 @@
 {
+  // Format with Prettier
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
+
+  // Remove/organize imports automatically
   "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit"
-  }
+    "source.organizeImports": "explicit",
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // "eslint.options": {
+  //   "cache": true,
+  //   "cacheLocation": "${workspaceFolder}/.eslintcache"
+  // },
+  // "eslint.validate": ["typescript", "typescriptreact", "javascript", "javascriptreact"],
+  // "eslint.run": "onType",
+  // "eslint.format.enable": true,
+
+  // Keep Prettier fast and deterministic
+  "prettier.requireConfig": true
 }

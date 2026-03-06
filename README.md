@@ -1,4 +1,4 @@
-# ArcGIS API for JavaScript template
+# ArcGIS Maps SDK app to compare contries and regions
 
 [![World Sizes](./public/thumbnail.png)](https://arnofiva.github.io/world-sizes)
 

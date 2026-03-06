@@ -1,47 +1,51 @@
-import Accessor from "@arcgis/core/core/Accessor";
-import {
-  property,
-  subclass,
-} from "@arcgis/core/core/accessorSupport/decorators";
+/**
+ * Copyright 2026 Esri
+ *
+ * Licensed under the Apache License Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import Collection from "@arcgis/core/core/Collection";
 import Handles from "@arcgis/core/core/Handles";
 import Graphic from "@arcgis/core/Graphic";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
+import SceneView from "@arcgis/core/views/SceneView";
+import WebScene from "@arcgis/core/WebScene";
 import SketchViewModel from "@arcgis/core/widgets/Sketch/SketchViewModel";
-import { map, palette, view } from "./globals";
+import { DeleteEvent, UpdateEvent } from "@arcgis/core/widgets/Sketch/types";
+import CountryPalette from "./CountryPalette";
 import PolygonTransform from "./PolygonTransform";
 import SelectedRegion from "./SelectedRegion";
 import TransformedRegion from "./TransformedRegion";
 
-@subclass("TrueSize.RegionEditor")
-export default class RegionEditor extends Accessor {
-  @property()
+export default class RegionEditor {
   sketchViewModel: SketchViewModel;
 
-  @property()
   sketchLayer: GraphicsLayer;
 
-  @property()
   graphicsLayer: GraphicsLayer;
 
-  @property()
-  regions: Collection<TransformedRegion> = new Collection();
+  regions = new Collection<TransformedRegion>();
 
-  @property()
   handles = new Handles();
 
-  @property()
+  private polygonTransform: PolygonTransform;
+
   get active() {
     return this.sketchViewModel.state === "active";
   }
 
-  @property({ readOnly: true })
-  interactive = false;
-
-  @property()
   loading = false;
 
-  initialize() {
+  constructor(private view: SceneView, webScene: WebScene, private palette: CountryPalette) {
     this.sketchLayer = new GraphicsLayer({
       title: "Graphics layer for moving country center",
       listMode: "hide",
@@ -58,7 +62,7 @@ export default class RegionEditor extends Accessor {
       },
     });
 
-    map.loadAll().then(() => {
+    void webScene.loadAll().then(() => {
       if (!view.map) {
         return;
       }
@@ -77,34 +81,28 @@ export default class RegionEditor extends Accessor {
       },
     });
 
-    const polygonTransform = new PolygonTransform(view);
+    this.polygonTransform = new PolygonTransform(view);
 
-    // This needs to move somewhere else:
-    let lastAngle = 0;
-    this.sketchViewModel.on("update", (ev) => {
+    this.sketchViewModel.on("update", (ev: UpdateEvent) => {
       if (ev.state !== "active" || !ev.graphics.length) {
         return;
       }
 
       const region = this.regionFromGraphic(ev.graphics[0]);
-      const toolType = ev.toolEventInfo.type;
+      const toolType = ev.toolEventInfo?.type;
 
-      if (toolType === "move-start" || toolType === "rotate-start") {
-        this._set("interactive", true);
-      }
-
-      if (toolType === "move-stop" || toolType === "rotate-stop") {
-        this._set("interactive", false);
-        if (toolType === "move-stop" && region) {
-          view.goTo(region.center.geometry);
+      if (toolType === "move-stop" && region) {
+        const geometry = region.center.geometry;
+        if (geometry) {
+          void view.goTo(geometry);
         }
       }
     });
 
-    this.sketchViewModel.on("delete", (event) => {
+    this.sketchViewModel.on("delete", (event: DeleteEvent) => {
       event.graphics
-        .map((g) => this.regionFromGraphic(g))
-        .forEach((region) => {
+        .map(g => this.regionFromGraphic(g))
+        .forEach(region => {
           if (!region) {
             return;
           }
@@ -112,7 +110,7 @@ export default class RegionEditor extends Accessor {
           this.graphicsLayer.remove(region.graphic);
           this.graphicsLayer.remove(region.label);
           this.regions.remove(region);
-          palette.reinstate(region.selection.color);
+          this.palette.reinstate(region.selection.color);
         });
     });
   }
@@ -123,7 +121,7 @@ export default class RegionEditor extends Accessor {
   }
 
   private regionFromGraphic(graphic: Graphic) {
-    return this.regions.find((region) => {
+    return this.regions.find(region => {
       return (
         region.graphic === graphic ||
         region.selection.graphic === graphic ||
@@ -136,16 +134,16 @@ export default class RegionEditor extends Accessor {
   public continueEditing(graphic: Graphic) {
     const region = this.regionFromGraphic(graphic);
     if (region) {
-      this.sketchViewModel.update(region.center, {
+      void this.sketchViewModel.update(region.center, {
         enableScaling: false,
       });
     }
   }
 
   public editSelection(selection: SelectedRegion) {
-    palette.allocate();
+    this.palette.allocate();
 
-    const region = new TransformedRegion({ selection });
+    const region = new TransformedRegion(selection, this.polygonTransform);
 
     this.regions.add(region);
 
@@ -156,6 +154,9 @@ export default class RegionEditor extends Accessor {
     // view.goTo(country);
     this.continueEditing(selection.graphic);
 
-    view.goTo(region.center.geometry);
+    const geometry = region.center.geometry;
+    if (geometry) {
+      void this.view.goTo(geometry);
+    }
   }
 }
