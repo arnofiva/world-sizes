@@ -1,10 +1,10 @@
 {
-  "name": "3dgis-codekit",
+  "name": "world-sizes",
   "version": "1.0.0",
   "description": "ArcGIS Maps SDK app to compare contries and regions",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/esri/3dgis-codekit"
+    "url": "git+ssh://git@github.com/arnofiva/world-sizes"
   },
   "private": true,
   "type": "module",
