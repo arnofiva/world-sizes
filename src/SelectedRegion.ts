@@ -14,7 +14,7 @@ interface SelectedRegionProps {
 }
 
 function regionHash(region: Graphic) {
-  return `${region.layer.id}_${region.getObjectId()}`;
+  return `${region.layer?.id || "unknown"}_${region.getObjectId()}`;
 }
 
 @subclass("TrueSize.SelectedRegion")
@@ -41,12 +41,14 @@ export default class SelectedRegion extends Accessor {
       return;
     }
 
-    view.highlightOptions = {
-      color: this.color.light,
-      fillOpacity: 1,
-      haloColor: this.color.main,
-      haloOpacity: 0.7,
-    };
+    view.highlights = [
+      {
+        color: this.color.main,
+        // fillOpacity: 0.2,
+        // haloColor: this.color.main,
+        // haloOpacity: 0.7,
+      },
+    ];
 
     const region = this.graphic;
     const lv = await view.whenLayerView(region.layer as FeatureLayer);

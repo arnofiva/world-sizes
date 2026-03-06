@@ -34,7 +34,7 @@ export function countryLabel(region: Graphic) {
   }
 
   const layer = region.layer;
-  if (layer.type === "feature") {
+  if (layer?.type === "feature") {
     return region.getAttribute("NAME") || region.getAttribute("COUNTRY");
   }
 }
@@ -44,15 +44,23 @@ projection.load();
 export function graphicFromCountry(
   selectedRegion: Graphic,
   view: SceneView,
-  color: CountryColor
+  color: CountryColor,
 ) {
+  if (!selectedRegion.geometry) {
+    throw new Error("Selected region has no geometry.");
+  }
+
   const label = countryLabel(selectedRegion);
 
   // Need to do things in WGS84 otherwise 180 meridian causes trouble...
   const geometry = projection.project(
     selectedRegion.geometry,
-    SpatialReference.WGS84
+    SpatialReference.WGS84,
   ) as Polygon;
+
+  if (!geometry) {
+    throw new Error("Unable to project selected region geometry.");
+  }
 
   const fill = color.main.clone();
   fill.a = 0.2;

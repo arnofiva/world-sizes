@@ -1,7 +1,7 @@
 import Point from "@arcgis/core/geometry/Point";
 import Polygon from "@arcgis/core/geometry/Polygon";
 import SpatialReference from "@arcgis/core/geometry/SpatialReference";
-import * as externalRenderers from "@arcgis/core/views/3d/externalRenderers";
+import * as webgl from "@arcgis/core/views/3d/webgl";
 import SceneView from "@arcgis/core/views/SceneView";
 import { mat4, vec3, vec4 } from "gl-matrix";
 
@@ -15,25 +15,33 @@ export default class PolygonTransform {
   constructor(private view: SceneView) {}
 
   public rotate(polygon: Polygon, angle: number) {
-    const rot = vec3.create();
+    const rot = [0, 0, 0];
+    const centroid = polygon.centroid;
+    if (!centroid) {
+      return polygon.clone();
+    }
 
-    externalRenderers.toRenderCoordinates(
+    webgl.toRenderCoordinates(
       this.view,
-      [polygon.centroid.x, polygon.centroid.y, 0],
+      [centroid.x, centroid.y, 0],
       0,
       polygon.spatialReference,
       rot,
       0,
-      1
+      1,
     );
 
     const mat = mat4.create();
-    mat4.rotate(mat, mat, angle, rot);
+    mat4.rotate(mat, mat, angle, rot as vec3);
     return this.transformPolygon(polygon, mat);
   }
 
   public moveTo(polygon: Polygon, point: Point) {
     const centroid = polygon.centroid;
+    if (!centroid) {
+      return polygon.clone();
+    }
+
     const mat = mat4.create();
 
     this.addZRotation(point, mat, false);
@@ -46,8 +54,13 @@ export default class PolygonTransform {
   }
 
   public scale(polygon: Polygon, factor: number) {
-    const cx = polygon.centroid.x;
-    const cy = polygon.centroid.y;
+    const centroid = polygon.centroid;
+    if (!centroid) {
+      return polygon.clone();
+    }
+
+    const cx = centroid.x;
+    const cy = centroid.y;
 
     const result = polygon.clone();
 
@@ -83,7 +96,7 @@ export default class PolygonTransform {
   private axisAngleFromPoints(
     fromPoint: vec3,
     toPoint: vec3,
-    outAxisAngle = [0, 0, 1, 0] as vec4
+    outAxisAngle = [0, 0, 1, 0] as vec4,
   ) {
     vec3.cross(outAxisAngle as vec3, fromPoint, toPoint);
     vec3.normalize(outAxisAngle as vec3, outAxisAngle as vec3);
@@ -97,30 +110,30 @@ export default class PolygonTransform {
     x: number,
     y: number,
     spatialReference: SpatialReference,
-    mat: mat4
+    mat: mat4,
   ) {
-    const newCoord = vec3.fromValues(0, 0, 0);
+    const newCoord = [0, 0, 0];
 
-    externalRenderers.toRenderCoordinates(
+    webgl.toRenderCoordinates(
       this.view,
       [x, y, 0],
       0,
       spatialReference,
       newCoord,
       0,
-      1
+      1,
     );
 
-    vec3.transformMat4(newCoord, newCoord, mat);
+    vec3.transformMat4(newCoord as vec3, newCoord as vec3, mat);
     const newCoordSR = [0, 0, 0];
-    externalRenderers.fromRenderCoordinates(
+    webgl.fromRenderCoordinates(
       this.view,
       newCoord,
       0,
       newCoordSR,
       0,
       spatialReference,
-      1
+      1,
     );
 
     return [newCoordSR[0], newCoordSR[1]];
@@ -130,13 +143,12 @@ export default class PolygonTransform {
     const rings = [];
 
     const sr = polygon.spatialReference;
+    const centroid = polygon.centroid;
+    if (!centroid) {
+      return polygon.clone();
+    }
 
-    const [cLon] = this.transformCoordinates(
-      polygon.centroid.x,
-      polygon.centroid.y,
-      sr,
-      mat
-    );
+    const [cLon] = this.transformCoordinates(centroid.x, centroid.y, sr, mat);
 
     // const result = polygon.clone();
 
@@ -162,30 +174,33 @@ export default class PolygonTransform {
   }
 
   private addZRotation(point: Point, mat: mat4, invert: boolean) {
-    const nullCoords = vec3.create();
-    const currentCoords = vec3.create();
+    const nullCoords = [0, 0, 0];
+    const currentCoords = [0, 0, 0];
 
-    externalRenderers.toRenderCoordinates(
+    webgl.toRenderCoordinates(
       this.view,
       [0, 0, 0],
       0,
       point.spatialReference,
       nullCoords,
       0,
-      1
+      1,
     );
 
-    externalRenderers.toRenderCoordinates(
+    webgl.toRenderCoordinates(
       this.view,
       [point.x, 0, 0],
       0,
       point.spatialReference,
       currentCoords,
       0,
-      1
+      1,
     );
 
-    const rot = this.axisAngleFromPoints(nullCoords, currentCoords);
+    const rot = this.axisAngleFromPoints(
+      nullCoords as vec3,
+      currentCoords as vec3,
+    );
 
     if (isNaN(rot[3])) {
       return;
@@ -195,30 +210,33 @@ export default class PolygonTransform {
   }
 
   private addYRotation(point: Point, mat: mat4, invert: boolean) {
-    const nullCoords = vec3.create();
-    const currentCoords = vec3.create();
+    const nullCoords = [0, 0, 0];
+    const currentCoords = [0, 0, 0];
 
-    externalRenderers.toRenderCoordinates(
+    webgl.toRenderCoordinates(
       this.view,
       [0, 0, 0],
       0,
       point.spatialReference,
       nullCoords,
       0,
-      1
+      1,
     );
 
-    externalRenderers.toRenderCoordinates(
+    webgl.toRenderCoordinates(
       this.view,
       [0, point.y, 0],
       0,
       point.spatialReference,
       currentCoords,
       0,
-      1
+      1,
     );
 
-    const rot = this.axisAngleFromPoints(nullCoords, currentCoords);
+    const rot = this.axisAngleFromPoints(
+      nullCoords as vec3,
+      currentCoords as vec3,
+    );
 
     if (isNaN(rot[3])) {
       return;

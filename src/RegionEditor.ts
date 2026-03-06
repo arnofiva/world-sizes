@@ -59,6 +59,10 @@ export default class RegionEditor extends Accessor {
     });
 
     map.loadAll().then(() => {
+      if (!view.map) {
+        return;
+      }
+
       view.map.layers.push(this.sketchLayer);
       view.map.layers.push(this.graphicsLayer);
     });
@@ -91,7 +95,7 @@ export default class RegionEditor extends Accessor {
 
       if (toolType === "move-stop" || toolType === "rotate-stop") {
         this._set("interactive", false);
-        if (toolType === "move-stop") {
+        if (toolType === "move-stop" && region) {
           view.goTo(region.center.geometry);
         }
       }
@@ -101,6 +105,10 @@ export default class RegionEditor extends Accessor {
       event.graphics
         .map((g) => this.regionFromGraphic(g))
         .forEach((region) => {
+          if (!region) {
+            return;
+          }
+
           this.graphicsLayer.remove(region.graphic);
           this.graphicsLayer.remove(region.label);
           this.regions.remove(region);

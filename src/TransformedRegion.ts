@@ -70,10 +70,14 @@ export default class TransformedRegion extends Accessor {
     const region = (this.graphic = graphicFromCountry(
       props.selection.graphic,
       view,
-      color
+      color,
     ));
 
     const centroid = (region.geometry as Polygon).centroid;
+    if (!centroid) {
+      throw new Error("Unable to compute transformed region centroid.");
+    }
+
     this.center.geometry = centroid;
 
     const text = countryLabel(props.selection.graphic);
@@ -106,10 +110,10 @@ export default class TransformedRegion extends Accessor {
       this.watch("center.geometry", (center: Point) => {
         this.graphic.geometry = polygonTransform.moveTo(
           this.graphic.geometry as Polygon,
-          center
+          center,
         );
         this.label.geometry = center;
-      })
+      }),
     );
 
     this.handlers.add(
@@ -117,9 +121,9 @@ export default class TransformedRegion extends Accessor {
         const rad = ((oldAngle - newAngle) * Math.PI) / 180;
         this.graphic.geometry = polygonTransform.rotate(
           this.graphic.geometry as Polygon,
-          rad
+          rad,
         );
-      })
+      }),
     );
   }
 

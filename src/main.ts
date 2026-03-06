@@ -1,5 +1,4 @@
 import { whenOnce } from "@arcgis/core/core/reactiveUtils";
-import "@esri/calcite-components/dist/calcite/calcite.css";
 import "@esri/calcite-components/dist/components/calcite-loader";
 import App from "./App";
 import { view } from "./globals";
@@ -13,4 +12,4 @@ whenOnce(() => !view.updating).then(() => {
   loader?.parentElement?.removeChild(loader);
 });
 
-window["view"] = view;
+(window as typeof window & { view: typeof view }).view = view;

@@ -5,11 +5,19 @@
 To start:
 
 ```
+node --version   # Node 20 LTS recommended
 npm install
 npm run dev
 ```
 
-Then open your browser at http://localhost:3002/
+Then open your browser at the local URL printed by Vite (typically http://localhost:5173/).
+
+To build and preview production output:
+
+```
+npm run build
+npm run serve
+```
 
 ## Licensing
 
